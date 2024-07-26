@@ -2,40 +2,50 @@ package main
 
 import (
 	"linkmini/config"
+	"linkmini/handlers"
 	"log"
 	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/surrealdb/surrealdb.go"
 )
 
-const envPath = "../config/.env"
-
-var AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+var (
+	envPath      = "../.env"
+	AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	DB           *surrealdb.DB
+)
 
 func init() {
-	// load the environements file
-	godotenv.Load(envPath)
+	//------------- LOAD THE ENV FILE ------------- //
+	err := godotenv.Load(envPath)
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	gin.SetMode(gin.ReleaseMode)
 }
 
 func main() {
-	// connect to the DB
-	_, err := config.ConnectDB()
+	//------------- DATABASE ------------- //
+	err := config.ConnectDB()
 	if err != nil {
 		log.Fatal(err)
 	}
-	// create server
-	server := gin.Default()
 
-	// middleware
+	//------------- INIT SERVER ------------- //
+	server := gin.Default()
+	//------------- MIDDLEWARE ------------- //
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowMethods = AllowMethods
 	server.Use(cors.New(config))
 
-	// routes
+	//------------- ROUTES ------------- //
+	server.POST("/create", handlers.CreateShortURLHandler)
+	server.POST("/:hash", handlers.RedirectURL)
 
-	// run server
+	//------------- RUN SERVER ------------- //
 	server.Run(":" + os.Getenv("PORT"))
 }
