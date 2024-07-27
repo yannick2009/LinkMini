@@ -3,6 +3,8 @@ package handlers
 import (
 	"linkmini/service"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +21,7 @@ func CreateShortURLHandler(ctx *gin.Context) {
 	}
 
 	data, err := service.CreateShortURLService(request.URL)
+
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 	}
@@ -26,11 +29,21 @@ func CreateShortURLHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, data)
 }
 
+var hashParam string = "hash"
+
 func RedirectURL(ctx *gin.Context) {
-	URLHash := ctx.Param("hash")
-	longURL, err := service.GetLongURL(URLHash)
+	URLHash := ctx.Param(hashParam)
+	
+	URLData, err := service.GetLongURL(URLHash)
+
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 	}
-	ctx.Redirect(http.StatusPermanentRedirect, longURL)
+
+	if time.Now().After(URLData.ExpireAt) {
+		ctx.Redirect(http.StatusPermanentRedirect, URLData.LongURL)
+	} else {
+		ctx.Redirect(http.StatusPermanentRedirect, os.Getenv("CLIENT_URL")+"/invalid")
+		// TODO: call a service to delete the current shortURL in the database
+	}
 }
