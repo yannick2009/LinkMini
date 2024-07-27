@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@steveyuowo/vue-hot-toast": "^1.2.5",
+    "axios": "^1.7.2",
     "vue": "^3.4.31"
   },
   "devDependencies": {
