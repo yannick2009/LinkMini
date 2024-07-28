@@ -12,10 +12,10 @@ const dbConnectLink = "ws://localhost:8000/rpc"
 const dbUser = "DB_USER"
 const dbPassword = "DB_PASSWORD"
 const namespace = "linkmini"
+const database = "linkmini"
 
 var (
 	ErrDBconnection = errors.New("DB connection failed")
-	ErrDBTest       = errors.New("DB test failed")
 	ErrDBAuth       = errors.New("DB authentication failed")
 )
 
@@ -28,11 +28,16 @@ func ConnectDB() error {
 	}
 
 	if _, err = db.Signin(map[string]interface{}{
-		"NS":   namespace,
 		"user": os.Getenv(dbUser),
 		"pass": os.Getenv(dbPassword),
 	}); err != nil {
+		log.Print("fail to auth to SurrealDB ❌")
 		return errors.Join(err, ErrDBAuth)
+	}
+
+	if _, err = db.Use(namespace, database); err != nil {
+		log.Print("fail to access to the database ❌")
+		panic(err)
 	}
 
 	log.Print("Connected to DB ✅")
