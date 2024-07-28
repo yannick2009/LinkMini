@@ -44,7 +44,8 @@ func main() {
 
 	//------------- ROUTES ------------- //
 	server.POST("/create", handlers.CreateShortURLHandler)
-	server.POST("/:hash", handlers.RedirectURL)
+	server.GET("/:hash", handlers.RedirectURL)
+	server.GET("/stats/:hash", handlers.GetURLStats)
 
 	//------------- RUN SERVER ------------- //
 	server.Run(":" + os.Getenv("PORT"))
