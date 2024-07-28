@@ -20,8 +20,8 @@ var (
 
 func CreateShortURLService(url string) (*model.URL, error) {
 	URLHash := utils.GenerateHash()
-	CreatedAt := time.Now()
-	ExpireAt := CreatedAt.Add(45 * 24 * time.Hour)
+	CreatedAt := time.Now().UTC()
+	ExpireAt := CreatedAt.Add(45 * 24 * time.Hour).UTC()
 	QrCode, err := qrcode.Encode(url, qrcode.Medium, 256)
 	if err != nil {
 		return nil, errors.Join(err, ErrQrCode)
@@ -32,7 +32,7 @@ func CreateShortURLService(url string) (*model.URL, error) {
 		URLHash:   URLHash,
 		CreatedAt: CreatedAt,
 		ExpireAt:  ExpireAt,
-		QrCode:    string(QrCode),
+		QrCode:    QrCode,
 	}
 
 	data, err := config.DB.Create("url:"+URLHash, URLData)
@@ -61,14 +61,30 @@ func GetLongURL(URLHash string) (*model.URL, error) {
 		panic(err)
 	}
 
-	clickNumUpdate := map[string]interface{}{
-		"clickNum": selectedURL.ClickNum + 1,
-	}
-	if _, err = config.DB.Change("url:"+selectedURL.URLHash, clickNumUpdate); err != nil {
-		// panic(err)
-		return nil, errors.Join(err, ErrUpdateURLData)
-	}
-
 	return selectedURL, nil
 
+}
+
+func GetLongURLAndUpdate(URLHash string) (*model.URL, error) {
+	data, err := config.DB.Select("url:" + URLHash)
+	if err != nil {
+		return nil, errors.Join(err, ErrDataNotFound)
+	}
+
+	selectedURL := new(model.URL)
+	err = surrealdb.Unmarshal(data, &selectedURL)
+	if err != nil {
+		panic(err)
+	}
+
+	copySelectedURL := selectedURL
+	copySelectedURL.ClickNum++
+	config.DB.Update("url:"+selectedURL.URLHash, copySelectedURL)
+
+	return selectedURL, nil
+}
+
+func DeleteURLExpired(URLHash string) error {
+	_, err := config.DB.Delete("url:" + URLHash)
+	return err
 }
