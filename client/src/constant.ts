@@ -7,3 +7,5 @@ export const urlRegex: RegExp = new RegExp(
     '(\\#[-a-z\\d_]*)?$',
     'i'
 );
+
+export const shortUrlRegex: RegExp = new RegExp(/^(http:\/\/|https:\/\/)?(localhost:[0-9]{1,5}|[a-zA-Z0-9.-]+)\/[a-zA-Z0-9]{7}$/gm);
