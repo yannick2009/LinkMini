@@ -1,5 +1,3 @@
-<script setup></script>
-
 <template>
  <section class="container">
     <slot></slot>
