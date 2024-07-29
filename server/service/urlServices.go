@@ -22,7 +22,7 @@ func CreateShortURLService(url string) (*model.URL, error) {
 	URLHash := utils.GenerateHash()
 	CreatedAt := time.Now().UTC()
 	ExpireAt := CreatedAt.Add(45 * 24 * time.Hour).UTC()
-	QrCode, err := qrcode.Encode(url, qrcode.Medium, 256)
+	QrCode, err := qrcode.Encode(URLHash, qrcode.Medium, 256)
 	if err != nil {
 		return nil, errors.Join(err, ErrQrCode)
 	}
