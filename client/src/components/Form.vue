@@ -2,14 +2,32 @@
 import { ref, watch } from 'vue';
 import { urlRegex } from '../constant';
 import { toast } from '@steveyuowo/vue-hot-toast';
+import { createShortUrl } from '../api';
 
-// const qrcode = ref<string>('iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEX///8AAABVwtN+AAABo0lEQVR42uyYsbG0MAyE5SEgdAmU4tLs0lzKlUDogPH+s7L473h3l7551qAM8yVYq5WQ3HHHHX82IhhNUgkAHpJDO49cAQ8RWVqsufMhldDsyBmQ0JcWUXCs+1YFzY6cAuFYYffgFniqGk6BU8IB2Dfg9cgRMAwp1hxU1d9MbHLg5Gq2s/6l8cwNnFbMPI/iHdo+pgJE+LSiCp12fOZG2/UFRE4EwJ4QeJag93DNpgcAlZ8+ahOgdneR7A1gunkPkmUBxwNaUH1xWh8Am6QI9QxiSV0WJcAbwHtoLOHxSrSt9B+ynx0Qe+LgA6jEVehPPbgAOAtQz5I7k56K3sDrRfkBZN2pbTOsCJTrmOQBqEPVnGlpxX3U8+IMeCRwWEjoHJNEtHgvndcHMHqN9tKoJoxrumcAntoN0O1HaPzmT4utmYH/Gy2E0VHsr9kbYL/IqVg5Ms+phMMbYDsQvQGdaRnXMckPoH9gzH3n4Jffd0E+gKTFiyom7g/pnhuw9VXuNGQ2FL7/sLibGzBfwnDfVPq6byhvJjY5cMcdd/x6/AsAAP//HgYF/pjpdhcAAAAASUVORK5CYII=');
+const serverUrl: string = import.meta.env.VITE_SERVER_URL;
 const isValid = ref<boolean>(true);
 const longUrl = ref<string>('');
+const shortURL = ref<string>('');
 const qrcode = ref<string>('');
+
 function onSubmit(event: Event) {
     event.preventDefault();
-    toast.success('Form submitted');
+    createShortUrl(longUrl.value)
+        .then((res) => {
+            shortURL.value = serverUrl + '/' + res?.data.urlHash || '';
+            qrcode.value = res?.data.qrCode || '';
+        })
+        .catch((err) => {
+            console.error(err);
+            toast.error('Failed to generate short URL');
+        });
+}
+
+const copyLink = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.innerText.length === 0) return;
+    navigator.clipboard.writeText(target?.innerText || '');
+    toast.success('Link copied');
 }
 
 watch(longUrl, (newVal) => {
@@ -33,7 +51,7 @@ watch(longUrl, (newVal) => {
             <img v-if="qrcode" :src="'data:image/png;base64,' + qrcode" alt="" srcset="">
         </div>
         <label for="short">short URL</label>
-        <input disabled id="short" type="text">
+        <p id="short" @click="copyLink">{{ shortURL }}</p>
     </form>
     <form @submit="onSubmit">
         <label for="long">Your long URL</label>
@@ -95,14 +113,14 @@ form>* {
     outline: none;
 }
 
-form>label {
+form label {
     font-size: 1.2rem;
     font-weight: 700;
     color: #334155;
     margin: .5rem 0;
 }
 
-form>input {
+form input {
     padding: 1.2rem;
     margin: .5rem 0;
     border: 1px solid #2563EB;
@@ -110,9 +128,17 @@ form>input {
     background: #DBEAFE;
 }
 
-form input:disabled {
-    background: #EFF6FF;
+form p {
+    padding: 1.2rem;
+    margin: .5rem 0;
     border: 1px dashed #2563EB;
+    border-radius: 5px;
+    background: #DBEAFE;
+    cursor: pointer;
+}
+
+form p:active {
+    background: #93C5FD;
 }
 
 form>button {
