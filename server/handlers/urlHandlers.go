@@ -3,6 +3,7 @@ package handlers
 import (
 	"linkmini/service"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,7 @@ func RedirectURL(ctx *gin.Context) {
 	if URLData != nil && time.Now().Before(URLData.ExpireAt) {
 		ctx.Redirect(http.StatusPermanentRedirect, URLData.LongURL)
 	} else {
-		ctx.Redirect(http.StatusPermanentRedirect, "https://www.mongodb.com/products/platform/atlas-database")
+		ctx.Redirect(http.StatusPermanentRedirect, os.Getenv("CLIENT_URL")+"/expired")
 		_ = service.DeleteURLExpired(URLHash)
 	}
 }

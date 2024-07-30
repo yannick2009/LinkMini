@@ -14,8 +14,12 @@ function onSubmit(event: Event) {
     event.preventDefault();
     createShortUrl(longUrl.value)
         .then((res) => {
+            if (res?.status !== 200) {
+                return;
+            }
             shortURL.value = serverUrl + '/' + res?.data.urlHash || '';
             qrcode.value = res?.data.qrCode || '';
+            longUrl.value = '';
         })
         .catch((err) => {
             console.error(err);
@@ -38,12 +42,21 @@ watch(longUrl, (newVal) => {
     }
 });
 
+const downloadImage = () => {
+    const link = document.createElement('a');
+    link.href = 'data:image/png;base64,' + qrcode.value;
+    link.download = 'qrcode.png';
+    link.click();
+    document.body.removeChild(link);
+}
+
 </script>
 
 <template>
-    <form>
+    <form @submit.prevent="downloadImage">
         <label>QR Code</label>
         <div class="qrcode">
+            <button v-if="qrcode"><i class="fa-solid fa-download"></i></button>
             <div v-if="!qrcode" class="no-qrcode">
                 <i class="fa-solid fa-qrcode"></i>
                 No QR Code
@@ -56,7 +69,7 @@ watch(longUrl, (newVal) => {
     <form @submit="onSubmit">
         <label for="long">Your long URL</label>
         <input :class="!isValid ? 'invalid' : ''" v-model="longUrl" id="long" type="text">
-        <button :disabled="!isValid || longUrl.trim().length == 0">Generate</button>
+        <button type="submit" :disabled="!isValid || longUrl.trim().length == 0">Generate</button>
     </form>
 </template>
 
@@ -94,12 +107,25 @@ form .no-qrcode i {
 }
 
 form .qrcode {
+    position: relative;
     width: 100%;
     height: 200px;
     background: white;
     border-radius: 5px;
     margin-bottom: 1rem;
     border: 1px dashed #2563EB;
+}
+
+form .qrcode button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: .5rem;
+    cursor: pointer;
 }
 
 form .qrcode img {

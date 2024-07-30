@@ -13,7 +13,6 @@ const clickNum = ref<number>(0);
 function onSubmit(event: Event) {
     event.preventDefault();
     const urlHash = shortURL.value.split('/').pop();
-    console.log(urlHash);
     getShortUrlStats(urlHash ?? '')
         .then((res) => {
             clickNum.value = res?.data?.clickNum || 0;
@@ -26,7 +25,6 @@ function onSubmit(event: Event) {
 
 watch(shortURL, (newVal) => {
     if (!shortUrlRegex.test(newVal)) {
-        console.log(!shortUrlRegex.test(newVal));
         isValid.value = false;
     } else {
         isValid.value = true;

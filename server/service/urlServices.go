@@ -5,6 +5,7 @@ import (
 	"linkmini/config"
 	"linkmini/model"
 	"linkmini/utils"
+	"os"
 	"time"
 
 	"github.com/skip2/go-qrcode"
@@ -20,15 +21,17 @@ var (
 
 func CreateShortURLService(url string) (*model.URL, error) {
 	URLHash := utils.GenerateHash()
+	ShortURL := os.Getenv("SERVER_URL") + "/" + URLHash
 	CreatedAt := time.Now().UTC()
 	ExpireAt := CreatedAt.Add(45 * 24 * time.Hour).UTC()
-	QrCode, err := qrcode.Encode(URLHash, qrcode.Medium, 256)
+	QrCode, err := qrcode.Encode(ShortURL, qrcode.Medium, 256)
 	if err != nil {
 		return nil, errors.Join(err, ErrQrCode)
 	}
 
 	URLData := model.URL{
 		LongURL:   url,
+		ShortURL:  ShortURL,
 		URLHash:   URLHash,
 		CreatedAt: CreatedAt,
 		ExpireAt:  ExpireAt,

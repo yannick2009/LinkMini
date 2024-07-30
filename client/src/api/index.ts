@@ -5,6 +5,7 @@ const serverUrl: string = import.meta.env.VITE_SERVER_URL;
 
 type Url = {
     longUrl: string;
+    shortUrl: string;
     urlHash: string;
     clickNum: number;
     qrCode: string;
